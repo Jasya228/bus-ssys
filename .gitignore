@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+.DS_Store
+Thumbs.db
+frontend/public/anya-eng.docx
+frontend/public/anya-eng-updated.docx
+*.py
+__pycache__/
+*.pyc
+.vite/
+venv/
+microservice_ai/venv/
+backend/node_modules/
+frontend/node_modules/
