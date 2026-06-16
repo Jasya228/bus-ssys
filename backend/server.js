@@ -363,7 +363,15 @@ async function startServer() {
     }
   });
 
-  app.listen(5000, () => console.log('Backend (MongoDB + API) started on port 5000'));
+  // --- SERVE FRONTEND (NO NGINX NEEDED) ---
+  const frontendDistPath = path.join(__dirname, '../frontend/dist');
+  app.use(express.static(frontendDistPath));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+  });
+
+  app.listen(80, () => console.log('Full Stack Server started on port 80'));
 }
 
 startServer().catch(console.error);

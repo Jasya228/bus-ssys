@@ -14,7 +14,7 @@ import {
 import axios from 'axios';
 import './Home.css';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = '/api';
 
 const POPULAR_DESTINATIONS = [
   { id: 'medeu', name: 'Каток Медеу', img: '/medeu.jpg', desc: 'Спортивный комплекс' },

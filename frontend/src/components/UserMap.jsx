@@ -175,7 +175,7 @@ export default function UserMap() {
 
     const runCalc = async (origin) => {
       try {
-        const res = await axios.get('http://localhost:5000/api/search-route', {
+        const res = await axios.get('/api/search-route', {
           params: { fromLat: origin.lat, fromLng: origin.lng, toLat: target.lat, toLng: target.lng }
         });
         const result = res.data;
@@ -206,7 +206,7 @@ export default function UserMap() {
   /* ── Destination from Home page ── */
   const dest = location.state?.destination || '';
   useEffect(() => {
-    const BASE = 'http://localhost:5000/api';
+    const BASE = '/api';
     axios.get(`${BASE}/routes`).then(r => {
       const fetched = Array.isArray(r.data) ? r.data : [];
       setAllRoutes(fetched);
@@ -224,7 +224,7 @@ export default function UserMap() {
 
   /* ── Bus polling ── */
   useEffect(() => {
-    const poll = () => axios.get('http://localhost:5000/api/buses', { timeout: 2000 })
+    const poll = () => axios.get('/api/buses', { timeout: 2000 })
       .then(r => setAllBuses(Array.isArray(r.data) ? r.data : []))
       .catch(() => {});
     poll();

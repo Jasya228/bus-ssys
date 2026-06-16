@@ -98,7 +98,7 @@ export default function AdminPanel() {
   useEffect(() => {
     const fetchBuses = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/buses', { timeout: 2000 });
+        const res = await axios.get('/api/buses', { timeout: 2000 });
         setBuses(Array.isArray(res.data) ? res.data : []);
         setOnline(true);
       } catch (e) {
@@ -109,8 +109,8 @@ export default function AdminPanel() {
     const fetchInfra = async () => {
       try {
         const [rRes, sRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/routes'),
-          axios.get('http://localhost:5000/api/stops')
+          axios.get('/api/routes'),
+          axios.get('/api/stops')
         ]);
         setAllRoutes(Array.isArray(rRes.data) ? rRes.data : []);
         setAllStops(Array.isArray(sRes.data) ? sRes.data : []);
@@ -134,7 +134,7 @@ export default function AdminPanel() {
       return;
     }
     try {
-      const res = await axios.post('http://localhost:5000/api/stops', { 
+      const res = await axios.post('/api/stops', { 
         name: stopPrompt.name, 
         lat: stopPrompt.lat, 
         lng: stopPrompt.lng 
@@ -155,7 +155,7 @@ export default function AdminPanel() {
     }
     setIsSaving(true);
     try {
-      await axios.post('http://localhost:5000/api/routes', {
+      await axios.post('/api/routes', {
         number: routeNumber,
         name: routeName,
         stopOrder: editorStops.map(s => s.id)
@@ -167,8 +167,8 @@ export default function AdminPanel() {
       
       // Refresh infra
       const [rRes, sRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/routes'),
-        axios.get('http://localhost:5000/api/stops')
+        axios.get('/api/routes'),
+        axios.get('/api/stops')
       ]);
       setAllRoutes(rRes.data);
       setAllStops(sRes.data);

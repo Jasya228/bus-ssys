@@ -28,7 +28,7 @@ import {
 import axios from 'axios';
 import './DriverPanel.css';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = '/api';
 
 const makeToast = (type, text) => ({ id: Date.now(), type, text });
 
