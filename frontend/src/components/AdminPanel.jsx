@@ -59,6 +59,8 @@ export default function AdminPanel() {
   const [buses, setBuses] = useState([]);
   const [online, setOnline] = useState(false);
   const [activeTab, setActiveTab] = useState('DASHBOARD'); // 'DASHBOARD' | 'EDITOR'
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
 
   // Editor State
   const [routeName, setRouteName] = useState("");
@@ -334,6 +336,37 @@ export default function AdminPanel() {
   const filteredBuses = selectedRouteFilter === 'ALL' 
     ? buses 
     : buses.filter(b => b.routeId === selectedRouteFilter);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="admin-root" style={{ justifyContent: 'center', alignItems: 'center' }}>
+        <div className="nasa-modal">
+          <h4 style={{ marginTop: 0, color: '#EF4444', letterSpacing: '2px' }}>ОГРАНИЧЕННЫЙ ДОСТУП</h4>
+          <p style={{ fontSize: '14px', color: '#9CA3AF' }}>Введите пароль администратора:</p>
+          <input 
+            type="password" 
+            className="nasa-input"
+            style={{ width: '100%', boxSizing: 'border-box', marginBottom: '15px', background: '#1F2937', color: 'white', padding: '10px', border: '1px solid #374151', borderRadius: '4px' }}
+            value={passwordInput} 
+            onChange={e => setPasswordInput(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                if (passwordInput === '12345') setIsAuthenticated(true);
+                else alert('Неверный пароль!');
+              }
+            }}
+            autoFocus
+          />
+          <div className="nasa-modal-actions" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button className="nasa-btn primary" style={{ background: '#EF4444', color: '#FFF', padding: '8px 16px', border: 'none', cursor: 'pointer', borderRadius: '4px', fontWeight: 'bold' }} onClick={() => {
+              if (passwordInput === '12345') setIsAuthenticated(true);
+              else alert('Неверный пароль!');
+            }}>АВТОРИЗОВАТЬСЯ</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-root">

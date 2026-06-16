@@ -542,3 +542,20 @@
   to { transform: translateX(0); opacity: 1; }
 }
 
+@media (max-width: 768px) {
+  .admin-navbar { flex-direction: column; gap: 10px; align-items: flex-start; }
+  .nav-left h2 { display: none; }
+  .nav-right { width: 100%; display: flex; justify-content: flex-end; }
+  .nasa-top-panel { flex-direction: column; }
+  .nasa-main-grid { flex-direction: column; overflow-y: auto; }
+  .admin-editor-content { flex-direction: column; overflow-y: auto; }
+  .editor-sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid #1F2937; }
+  .editor-map-wrapper { height: 400px; min-height: 400px; flex: none; }
+  .nasa-cctv-viewer { min-height: 400px; padding: 0; }
+  .nasa-cam-card.single { flex-direction: column; }
+  .nasa-cam-card.single .nasa-cam-video { width: 100%; border-right: none; border-bottom: 1px solid #1E293B; }
+  .nasa-cam-card.single .nasa-cam-telemetry { width: 100%; height: auto; padding-bottom: 20px; }
+  .tabs { flex-wrap: wrap; width: 100%; justify-content: center; }
+  .nasa-kpi { border-right: none; border-bottom: 1px solid #1E293B; padding-bottom: 8px; margin-bottom: 8px; }
+  .nasa-kpi:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+}

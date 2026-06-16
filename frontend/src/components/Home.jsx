@@ -75,10 +75,6 @@ function Home() {
             <div className="status-dot"></div>
             {online ? 'Система активна' : 'Офлайн'}
           </div>
-          <button className="open-map-btn admin" onClick={() => navigate('/admin')}>
-            <Activity size={18} />
-            Админ-панель (Live)
-          </button>
           <button className="open-map-btn" onClick={() => goToMap()}>
             <Map size={18} />
             Открыть Карту

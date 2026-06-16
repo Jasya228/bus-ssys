@@ -68,7 +68,6 @@ function Settings() {
         <nav className="settings-nav">
           <button className="active"><Map size={18} /> Карта маршрута</button>
           <button onClick={() => navigate('/driver')}><Bus size={18} /> Панель водителя</button>
-          <button onClick={() => navigate('/admin')}><UserCog size={18} /> Админ-панель</button>
         </nav>
 
         <SettingsGroup title="Основные">

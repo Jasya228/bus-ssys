@@ -461,11 +461,30 @@
 /* Responsive */
 @media (max-width: 768px) {
   .home-nav {
-    padding: 16px 20px;
+    flex-direction: column;
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .nav-actions {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .open-map-btn {
+    flex: 1;
+    justify-content: center;
   }
   
   .hero-title {
-    font-size: 36px;
+    font-size: 32px;
+  }
+
+  .hero-subtitle {
+    font-size: 15px;
+    margin-bottom: 32px;
   }
   
   .hero-search-box {
@@ -479,13 +498,32 @@
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
-    padding: 16px;
+    padding: 14px;
     margin-bottom: 12px;
     width: 100%;
+    box-sizing: border-box;
   }
   
   .search-submit-btn {
     width: 100%;
     justify-content: center;
+    box-sizing: border-box;
+  }
+
+  .dest-img-wrap {
+    height: 180px;
+  }
+
+  .section-title {
+    font-size: 24px;
+  }
+
+  .stat-card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .stat-value {
+    font-size: 24px;
   }
 }
