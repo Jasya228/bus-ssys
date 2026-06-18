@@ -10,46 +10,46 @@ import axios from 'axios';
 /* ── POI DATA WITH GPS COORDS ── */
 const CATEGORY_DATA = {
   "Интересные локации": [
-    { id: 1, title: "Озеро Сайран", img: "/sairan.jpg", lat: 43.237, lng: 76.866 },
-    { id: 2, title: "Кок Тобе", img: "/kok_tobe.jpg", lat: 43.232, lng: 76.974 },
-    { id: 3, title: "Каток Медеу", img: "/medeu.jpg", lat: 43.157, lng: 77.059 },
-    { id: 4, title: "Шымбулак", img: "/shym.jpg", lat: 43.127, lng: 77.080 },
-    { id: 5, title: "Большое Алматинское Озеро", img: "/bao.jpg", lat: 43.050, lng: 76.984 },
-    { id: 9, title: "Горельник", img: "/gor.jpg", lat: 43.136, lng: 77.054 },
-    { id: 10, title: "Центральный Государственный музей", img: "/mus.jpg", lat: 43.235, lng: 76.949 },
-    { id: 11, title: "Музей искусств им. Кастеева", img: "/mus2.jpg", lat: 43.237, lng: 76.917 },
-    { id: 12, title: "Вознесенский собор", img: "/sobor.jpg", lat: 43.258, lng: 76.953 },
+    { id: 1, title: "Озеро Сайран", img: "https://picsum.photos/seed/sairan/200", lat: 43.237, lng: 76.866 },
+    { id: 2, title: "Кок Тобе", img: "https://picsum.photos/seed/koktobe/200", lat: 43.232, lng: 76.974 },
+    { id: 3, title: "Каток Медеу", img: "https://picsum.photos/seed/medeu/200", lat: 43.157, lng: 77.059 },
+    { id: 4, title: "Шымбулак", img: "https://picsum.photos/seed/shym/200", lat: 43.127, lng: 77.080 },
+    { id: 5, title: "Большое Алматинское Озеро", img: "https://picsum.photos/seed/bao/200", lat: 43.050, lng: 76.984 },
+    { id: 9, title: "Горельник", img: "https://picsum.photos/seed/gor/200", lat: 43.136, lng: 77.054 },
+    { id: 10, title: "Центральный Государственный музей", img: "https://picsum.photos/seed/mus/200", lat: 43.235, lng: 76.949 },
+    { id: 11, title: "Музей искусств им. Кастеева", img: "https://picsum.photos/seed/kasteyev/200", lat: 43.237, lng: 76.917 },
+    { id: 12, title: "Вознесенский собор", img: "https://picsum.photos/seed/sobor/200", lat: 43.258, lng: 76.953 },
   ],
   "Парки": [
-    { id: 13, title: "Парк Горького", img: "/gorko.jpg", lat: 43.262, lng: 76.971 },
-    { id: 14, title: "Парк 28 гвардейцев-панфиловцев", img: "/park28.jpg", lat: 43.258, lng: 76.953 },
-    { id: 15, title: "Президентский парк", img: "/first.jpg", lat: 43.193, lng: 76.887 },
-    { id: 16, title: "Ботанический Сад", img: "/botsad.jpg", lat: 43.222, lng: 76.915 },
-    { id: 19, title: "Роща Баума", img: "/parks.png", lat: 43.301, lng: 76.945 },
+    { id: 13, title: "Парк Горького", img: "https://picsum.photos/seed/gorko/200", lat: 43.262, lng: 76.971 },
+    { id: 14, title: "Парк 28 гвардейцев-панфиловцев", img: "https://picsum.photos/seed/panf/200", lat: 43.258, lng: 76.953 },
+    { id: 15, title: "Президентский парк", img: "https://picsum.photos/seed/prespark/200", lat: 43.193, lng: 76.887 },
+    { id: 16, title: "Ботанический Сад", img: "https://picsum.photos/seed/botsad/200", lat: 43.222, lng: 76.915 },
+    { id: 19, title: "Роща Баума", img: "https://picsum.photos/seed/bauma/200", lat: 43.301, lng: 76.945 },
   ],
   "Еда": [
-    { id: 25, title: "Арбат (ул. Панфилова)", img: "/arbat.jpg", lat: 43.261, lng: 76.941 },
-    { id: 26, title: "Зеленый Базар", img: "/greenmarket.jpg", lat: 43.263, lng: 76.954 },
-    { id: 27, title: "Ресторан Navat (Достык)", img: "/navat.jpg", lat: 43.242, lng: 76.956 },
-    { id: 28, title: "Кафе Киноглаз", img: "/food.png", lat: 43.250, lng: 76.940 },
-    { id: 31, title: "Гастромаркет PlatformA", img: "/food.png", lat: 43.241, lng: 76.921 },
+    { id: 25, title: "Арбат (ул. Панфилова)", img: "https://picsum.photos/seed/arbat/200", lat: 43.261, lng: 76.941 },
+    { id: 26, title: "Зеленый Базар", img: "https://picsum.photos/seed/greenbazar/200", lat: 43.263, lng: 76.954 },
+    { id: 27, title: "Ресторан Navat (Достык)", img: "https://picsum.photos/seed/navat/200", lat: 43.242, lng: 76.956 },
+    { id: 28, title: "Кафе Киноглаз", img: "https://picsum.photos/seed/kino/200", lat: 43.250, lng: 76.940 },
+    { id: 31, title: "Гастромаркет PlatformA", img: "https://picsum.photos/seed/platforma/200", lat: 43.241, lng: 76.921 },
   ],
   "Пляжи": [
-    { id: 42, title: "Пляжная зона Сайран", img: "/beaches.png", lat: 43.235, lng: 76.853 },
-    { id: 40, title: "Пляжи Первомайских прудов", img: "/beaches.png", lat: 43.342, lng: 76.851 },
+    { id: 42, title: "Пляжная зона Сайран", img: "https://picsum.photos/seed/beach1/200", lat: 43.235, lng: 76.853 },
+    { id: 40, title: "Пляжи Первомайских прудов", img: "https://picsum.photos/seed/beach2/200", lat: 43.342, lng: 76.851 },
   ],
   "Здоровье": [
-    { id: 47, title: "Медеу — лестница здоровья", img: "/medeules.jpg", lat: 43.157, lng: 77.059 },
-    { id: 51, title: "Arasan Wellness SPA", img: "/health.png", lat: 43.264, lng: 76.947 },
-    { id: 49, title: "Санаторий Almaty Resort", img: "/resort.png", lat: 43.192, lng: 76.872 },
+    { id: 47, title: "Медеу — лестница здоровья", img: "https://picsum.photos/seed/health1/200", lat: 43.157, lng: 77.059 },
+    { id: 51, title: "Arasan Wellness SPA", img: "https://picsum.photos/seed/health2/200", lat: 43.264, lng: 76.947 },
+    { id: 49, title: "Санаторий Almaty Resort", img: "https://picsum.photos/seed/health3/200", lat: 43.192, lng: 76.872 },
   ],
   "Торговля": [
-    { id: 57, title: "ТРЦ Mega Alma-Ata", img: "/mega.png", lat: 43.201, lng: 76.892 },
-    { id: 58, title: "ТРЦ Dostyk Plaza", img: "/other.png", lat: 43.234, lng: 76.957 },
-    { id: 59, title: "Esentai Mall", img: "/other.png", lat: 43.218, lng: 76.928 },
-    { id: 62, title: "Алматинский зоопарк", img: "/other.png", lat: 43.262, lng: 76.975 },
-    { id: 66, title: "Выставочный центр Атакент", img: "/other.png", lat: 43.225, lng: 76.913 },
-    { id: 67, title: "Аэропорт Алматы ALA", img: "/hero.png", lat: 43.352, lng: 77.040 },
+    { id: 57, title: "ТРЦ Mega Alma-Ata", img: "https://picsum.photos/seed/mega/200", lat: 43.201, lng: 76.892 },
+    { id: 58, title: "ТРЦ Dostyk Plaza", img: "https://picsum.photos/seed/dostyk/200", lat: 43.234, lng: 76.957 },
+    { id: 59, title: "Esentai Mall", img: "https://picsum.photos/seed/esentai/200", lat: 43.218, lng: 76.928 },
+    { id: 62, title: "Алматинский зоопарк", img: "https://picsum.photos/seed/zoo/200", lat: 43.262, lng: 76.975 },
+    { id: 66, title: "Выставочный центр Атакент", img: "https://picsum.photos/seed/atakent/200", lat: 43.225, lng: 76.913 },
+    { id: 67, title: "Аэропорт Алматы ALA", img: "https://picsum.photos/seed/airport/200", lat: 43.352, lng: 77.040 },
   ],
 };
 
@@ -186,7 +186,7 @@ export default function UserMap() {
         }
       } catch (e) {
         console.error('Route calc error:', e);
-        setRouteError('Ошибка при построении маршрута.');
+        setRouteError(`Ошибка при построении маршрута: ${e.response?.data?.error || e.message}`);
       } finally {
         setIsLoadingRoute(false);
       }
