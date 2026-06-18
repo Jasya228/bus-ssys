@@ -266,7 +266,7 @@ async function startServer() {
         let bestBoard = null, bestBoardDist = Infinity;
         for (const s of routeStops) {
           const d = getDistanceFromLatLonInKm(fromLat, fromLng, s.lat, s.lng);
-          if (d < 3.0 && d < bestBoardDist) { bestBoardDist = d; bestBoard = s; }
+          if (d < 4.0 && d < bestBoardDist) { bestBoardDist = d; bestBoard = s; }
         }
         if (!bestBoard) continue;
 
@@ -302,7 +302,7 @@ async function startServer() {
         let bestBoard1 = null, bestBoard1Dist = Infinity;
         for (const s of route1Stops) {
           const d = getDistanceFromLatLonInKm(fromLat, fromLng, s.lat, s.lng);
-          if (d < 2.0 && d < bestBoard1Dist) { bestBoard1Dist = d; bestBoard1 = s; }
+          if (d < 4.0 && d < bestBoard1Dist) { bestBoard1Dist = d; bestBoard1 = s; }
         }
         if (!bestBoard1) continue;
 
@@ -313,7 +313,7 @@ async function startServer() {
           let bestAlight2 = null, bestAlight2Dist = Infinity;
           for (const s of route2Stops) {
             const d = getDistanceFromLatLonInKm(toLat, toLng, s.lat, s.lng);
-            if (d < 2.0 && d < bestAlight2Dist) { bestAlight2Dist = d; bestAlight2 = s; }
+            if (d < 4.0 && d < bestAlight2Dist) { bestAlight2Dist = d; bestAlight2 = s; }
           }
           if (!bestAlight2) continue;
 
@@ -325,7 +325,7 @@ async function startServer() {
             for (const s2 of route2Stops) {
               if (s2.id === bestAlight2.id) continue;
               const d = getDistanceFromLatLonInKm(s1.lat, s1.lng, s2.lat, s2.lng);
-              if (d < 0.6 && d < minTransferDist) {
+              if (d < 1.5 && d < minTransferDist) {
                 minTransferDist = d;
                 bestTransfer = { s1, s2, dist: d };
               }
