@@ -281,21 +281,35 @@ export default function UserMap() {
   }, [query, allRoutes, externalPois]);
 
   const mapBuses = useMemo(() => {
-    let targetId = routeObj?.id;
-    if (!targetId && transitRoute?.route?.number) {
-      const matched = allRoutes.find(r => String(r.number) === String(transitRoute.route.number));
-      if (matched) targetId = matched.id;
+    let targetIds = routeObj ? [routeObj.id] : [];
+    if (!routeObj && transitRoute) {
+      if (transitRoute.isTransfer) {
+        const m1 = allRoutes.find(r => String(r.number) === String(transitRoute.route1?.number));
+        const m2 = allRoutes.find(r => String(r.number) === String(transitRoute.route2?.number));
+        if (m1) targetIds.push(m1.id);
+        if (m2) targetIds.push(m2.id);
+      } else if (transitRoute.route?.number) {
+        const m = allRoutes.find(r => String(r.number) === String(transitRoute.route.number));
+        if (m) targetIds.push(m.id);
+      }
     }
-    return targetId ? allBuses.filter(b => b.routeId === targetId) : [];
+    return targetIds.length ? allBuses.filter(b => targetIds.includes(b.routeId)) : [];
   }, [routeObj, allBuses, transitRoute, allRoutes]);
 
   const mapStops = useMemo(() => {
-    let targetId = routeObj?.id;
-    if (!targetId && transitRoute?.route?.number) {
-      const matched = allRoutes.find(r => String(r.number) === String(transitRoute.route.number));
-      if (matched) targetId = matched.id;
+    let targetIds = routeObj ? [routeObj.id] : [];
+    if (!routeObj && transitRoute) {
+      if (transitRoute.isTransfer) {
+        const m1 = allRoutes.find(r => String(r.number) === String(transitRoute.route1?.number));
+        const m2 = allRoutes.find(r => String(r.number) === String(transitRoute.route2?.number));
+        if (m1) targetIds.push(m1.id);
+        if (m2) targetIds.push(m2.id);
+      } else if (transitRoute.route?.number) {
+        const m = allRoutes.find(r => String(r.number) === String(transitRoute.route.number));
+        if (m) targetIds.push(m.id);
+      }
     }
-    return targetId ? allStops.filter(s => s.routeId === targetId) : [];
+    return targetIds.length ? allStops.filter(s => targetIds.includes(s.routeId)) : [];
   }, [routeObj, allStops, transitRoute, allRoutes]);
 
   /* ── Clear everything ── */
