@@ -118,7 +118,14 @@ function FlyTo({ route, transitRoute }) {
   }, [route, map]);
   useEffect(() => {
     if (transitRoute?.walk1?.length && transitRoute?.walk2?.length) {
-      const allCoords = [...(transitRoute.walk1 || []), ...(transitRoute.busPath || []), ...(transitRoute.walk2 || [])];
+      const allCoords = [
+        ...(transitRoute.walk1 || []),
+        ...(transitRoute.busPath || []),
+        ...(transitRoute.busPath1 || []),
+        ...(transitRoute.transferWalk || []),
+        ...(transitRoute.busPath2 || []),
+        ...(transitRoute.walk2 || [])
+      ];
       const valid = allCoords.filter(Array.isArray);
       if (valid.length > 1) map.flyToBounds(L.latLngBounds(valid), { padding: [80, 80], duration: 1.2 });
     }
@@ -338,9 +345,20 @@ export default function UserMap() {
             {/* Walk 1 */}
             <Polyline positions={transitRoute.walk1} color="#667085" weight={3} dashArray="8,6" opacity={0.8} />
 
-            {/* Bus path */}
-            {!transitRoute.isDirect && transitRoute.busPath?.length > 0 && (
+            {/* DIRECT OR NO TRANSFER */}
+            {!transitRoute.isTransfer && !transitRoute.isDirect && transitRoute.busPath?.length > 0 && (
               <Polyline positions={transitRoute.busPath} color="#2f80ed" weight={5} opacity={1} />
+            )}
+
+            {/* WITH TRANSFER */}
+            {transitRoute.isTransfer && transitRoute.busPath1?.length > 0 && (
+              <Polyline positions={transitRoute.busPath1} color="#2f80ed" weight={5} opacity={1} />
+            )}
+            {transitRoute.isTransfer && transitRoute.transferWalk?.length > 0 && (
+              <Polyline positions={transitRoute.transferWalk} color="#f59e0b" weight={3} dashArray="8,6" opacity={0.8} />
+            )}
+            {transitRoute.isTransfer && transitRoute.busPath2?.length > 0 && (
+              <Polyline positions={transitRoute.busPath2} color="#10B981" weight={5} opacity={1} />
             )}
 
             {/* Walk 2 (partial — дальше пешком) */}
@@ -348,28 +366,37 @@ export default function UserMap() {
               <Polyline positions={transitRoute.walk2} color="#f59e0b" weight={3} dashArray="8,6" opacity={0.9} />
             )}
 
-            {/* Walk direct */}
-            {transitRoute.isDirect && (
-              <Polyline positions={transitRoute.walk1} color="#667085" weight={3} dashArray="8,6" opacity={0.8} />
-            )}
-
             {/* User position */}
             <Marker position={transitRoute.walk1[0]} icon={stopIcon}>
               <Tooltip direction="bottom" offset={[0, 8]} opacity={1} className="anime-tooltip" permanent>Вы здесь</Tooltip>
             </Marker>
 
-            {/* Boarding stop */}
+            {/* Boarding stop 1 */}
             {!transitRoute.isDirect && transitRoute.stop1 && (
               <Marker position={[transitRoute.stop1.lat, transitRoute.stop1.lng]} icon={stopIcon}>
                 <Tooltip direction="top" offset={[0, -8]} opacity={1} className="anime-tooltip" permanent>🚌 {transitRoute.stop1.name}</Tooltip>
               </Marker>
             )}
 
-            {/* Alighting stop */}
-            {!transitRoute.isDirect && transitRoute.stop2 && (
-              <Marker position={[transitRoute.stop2.lat, transitRoute.stop2.lng]} icon={stopIcon}>
-                <Tooltip direction="top" offset={[0, -8]} opacity={1} className="anime-tooltip" permanent>⬇ {transitRoute.stop2.name}</Tooltip>
-              </Marker>
+            {/* Transfer / Alighting */}
+            {transitRoute.isTransfer ? (
+              <>
+                <Marker position={[transitRoute.stop2.lat, transitRoute.stop2.lng]} icon={stopIcon}>
+                  <Tooltip direction="top" offset={[0, -8]} opacity={1} className="anime-tooltip" permanent>🔄 Выход: {transitRoute.stop2.name}</Tooltip>
+                </Marker>
+                <Marker position={[transitRoute.stop3.lat, transitRoute.stop3.lng]} icon={stopIcon}>
+                  <Tooltip direction="bottom" offset={[0, 8]} opacity={1} className="anime-tooltip" permanent>🚌 Пересадка: {transitRoute.stop3.name}</Tooltip>
+                </Marker>
+                <Marker position={[transitRoute.stop4.lat, transitRoute.stop4.lng]} icon={stopIcon}>
+                  <Tooltip direction="top" offset={[0, -8]} opacity={1} className="anime-tooltip" permanent>⬇ Выход: {transitRoute.stop4.name}</Tooltip>
+                </Marker>
+              </>
+            ) : (
+              !transitRoute.isDirect && transitRoute.stop2 && (
+                <Marker position={[transitRoute.stop2.lat, transitRoute.stop2.lng]} icon={stopIcon}>
+                  <Tooltip direction="top" offset={[0, -8]} opacity={1} className="anime-tooltip" permanent>⬇ {transitRoute.stop2.name}</Tooltip>
+                </Marker>
+              )
             )}
 
             {/* Destination */}
@@ -473,6 +500,31 @@ export default function UserMap() {
                   <span className="icon">🚶‍♂️</span>
                   <div className="step-detail">Пешком {(transitRoute.walk1Dist * 1000).toFixed(0)} м напрямую</div>
                 </div>
+              ) : transitRoute.isTransfer ? (
+                <>
+                  <div className="instruction-step walk">
+                    <span className="icon">🚶‍♂️</span>
+                    <div className="step-detail">Пешком <b>{(transitRoute.walk1Dist * 1000).toFixed(0)} м</b> до остановки<br /><span style={{ color: '#2f80ed', fontSize: 12 }}>«{transitRoute.stop1?.name}»</span></div>
+                  </div>
+                  <div className="instruction-step bus">
+                    <span className="icon">🚌</span>
+                    <div className="step-detail">Автобус №<b>{transitRoute.route1?.number}</b><br /><span style={{ color: '#667085', fontSize: 12 }}>до «{transitRoute.stop2?.name}»</span></div>
+                    <span className="step-badge">#{transitRoute.route1?.number}</span>
+                  </div>
+                  <div className="instruction-step walk">
+                    <span className="icon">🔄</span>
+                    <div className="step-detail">Пересадка <b>{(transitRoute.transferWalkDist * 1000).toFixed(0)} м</b><br /><span style={{ color: '#10B981', fontSize: 12 }}>Идите к «{transitRoute.stop3?.name}»</span></div>
+                  </div>
+                  <div className="instruction-step bus">
+                    <span className="icon">🚌</span>
+                    <div className="step-detail">Автобус №<b>{transitRoute.route2?.number}</b><br /><span style={{ color: '#667085', fontSize: 12 }}>до «{transitRoute.stop4?.name}»</span></div>
+                    <span className="step-badge" style={{background:'#e6f4ea', color:'#10b981'}}>#{transitRoute.route2?.number}</span>
+                  </div>
+                  <div className="instruction-step walk">
+                    <span className="icon">🥾</span>
+                    <div className="step-detail">Пешком <b>{(transitRoute.walk2Dist * 1000).toFixed(0)} м</b> до цели</div>
+                  </div>
+                </>
               ) : (
                 <>
                   <div className="instruction-step walk">

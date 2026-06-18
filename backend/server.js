@@ -51,18 +51,24 @@ async function startServer() {
         });
       }
 
-      // Load Buses into Memory (and DB for completeness)
-      for (let b of dbData.buses) {
-        await Bus.create({ id: b.id, routeId: b.routeId.toString(), passengers: b.passengers, lat: b.lat, lng: b.lng });
-        busesMemory.push({
-          id: b.id,
-          routeId: b.routeId.toString(),
-          passengers: b.passengers,
-          lat: b.lat,
-          lng: b.lng,
-          pathIndex: 0,
-          direction: 1
-        });
+      // Load Buses into Memory (4 buses per route dynamically)
+      for (let r of dbData.routes) {
+        if (!r.path || r.path.length < 2) continue;
+        for (let i = 0; i < 4; i++) {
+          const pathIndex = (r.path.length / 4) * i;
+          const pt = r.path[Math.floor(pathIndex)];
+          const busId = `b_${r.id}_${i}`;
+          await Bus.create({ id: busId, routeId: r.id.toString(), passengers: 20 + i*5, lat: pt[0], lng: pt[1] });
+          busesMemory.push({
+            id: busId,
+            routeId: r.id.toString(),
+            passengers: 20 + i*5,
+            lat: pt[0],
+            lng: pt[1],
+            pathIndex: pathIndex,
+            direction: i % 2 === 0 ? 1 : -1
+          });
+        }
       }
       console.log("Seeding complete!");
     }
@@ -77,7 +83,7 @@ async function startServer() {
       const route = routes.find(r => r.id === bus.routeId);
       if (!route || !route.path || route.path.length < 2) return bus;
 
-      let nextIndex = (bus.pathIndex || 0) + ((bus.direction || 1) * 0.05);
+      let nextIndex = (bus.pathIndex || 0) + ((bus.direction || 1) * 0.15); // Faster
 
       if (nextIndex >= route.path.length - 1) {
         bus.direction = -1;
@@ -222,7 +228,7 @@ async function startServer() {
     return R * c;
   }
 
-  // TRANSIT ROUTING ENGINE v2 — поддержка частичного маршрута
+  // TRANSIT ROUTING ENGINE v3 — поддержка пересадок
   app.get('/api/search-route', async (req, res) => {
     try {
       const fromLat = parseFloat(req.query.fromLat);
@@ -234,7 +240,6 @@ async function startServer() {
         return res.status(400).json({ error: 'Missing coordinates' });
       }
 
-      // Helper for true pedestrian paths via OSRM foot profile
       const getWalkingPath = async (lat1, lng1, lat2, lng2) => {
         try {
           const url = `http://router.project-osrm.org/route/v1/foot/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson`;
@@ -242,68 +247,113 @@ async function startServer() {
           if (res.data && res.data.routes && res.data.routes.length > 0) {
             return res.data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
           }
-        } catch(e) {
-          console.error('OSRM foot error:', e.message);
-        }
-        return [[lat1, lng1], [lat2, lng2]]; // Fallback straight line
+        } catch(e) {}
+        return [[lat1, lng1], [lat2, lng2]];
       };
 
       const directWalkDist = getDistanceFromLatLonInKm(fromLat, fromLng, toLat, toLng);
-
       const routes = await Route.find({});
       const stops  = await Stop.find({});
 
       let bestTransit = null;
-      let bestScore   = Infinity; // score = walk1 + walk2 (lower = better)
+      let bestScore   = Infinity;
 
+      // Фаза 1: Прямые рейсы
       for (const route of routes) {
         const routeStops = stops.filter(s => s.routeId === route.id);
         if (routeStops.length < 2) continue;
 
-        // Find BEST boarding stop (closest to user, within 4km)
         let bestBoard = null, bestBoardDist = Infinity;
         for (const s of routeStops) {
           const d = getDistanceFromLatLonInKm(fromLat, fromLng, s.lat, s.lng);
-          if (d < 4.0 && d < bestBoardDist) { bestBoardDist = d; bestBoard = s; }
+          if (d < 3.0 && d < bestBoardDist) { bestBoardDist = d; bestBoard = s; }
         }
         if (!bestBoard) continue;
 
-        // Among stops AFTER boarding stop, find CLOSEST stop to destination
-        // (this enables partial route: bus → closest stop → walk)
-        const boardIdx = routeStops.indexOf(routeStops.find(s => s.id === bestBoard.id));
         let bestAlight = null, bestAlightDist = Infinity;
-
-        for (let i = boardIdx + 1; i < routeStops.length; i++) {
-          const s = routeStops[i];
+        for (const s of routeStops) {
+          if (s.id === bestBoard.id) continue;
           const d = getDistanceFromLatLonInKm(toLat, toLng, s.lat, s.lng);
           if (d < bestAlightDist) { bestAlightDist = d; bestAlight = s; }
         }
         if (!bestAlight) continue;
 
-        // Score: only use this route if bus meaningfully improves distance to destination
-        const distAfterBus = getDistanceFromLatLonInKm(bestAlight.lat, bestAlight.lng, toLat, toLng);
-        const distIfWalkDirect = directWalkDist;
-
-        // Bus helps if: alight stop is closer to target than user's current position
-        const userDistToTarget = directWalkDist;
-        if (distAfterBus >= userDistToTarget) continue; // bus doesn't help
+        const distAfterBus = bestAlightDist;
+        if (distAfterBus >= directWalkDist) continue;
 
         const score = bestBoardDist + distAfterBus;
         if (score < bestScore) {
           bestScore = score;
           bestTransit = {
+            isTransfer: false,
             route,
             startStop: bestBoard,
             endStop: bestAlight,
             walk1Dist: bestBoardDist,
             walk2Dist: distAfterBus,
-            boardIdx,
           };
         }
       }
 
-      // If no transit better than walking, walk direct
-      if (!bestTransit || directWalkDist <= bestScore * 0.6) {
+      // Фаза 2: С одной пересадкой
+      for (const route1 of routes) {
+        const route1Stops = stops.filter(s => s.routeId === route1.id);
+        
+        let bestBoard1 = null, bestBoard1Dist = Infinity;
+        for (const s of route1Stops) {
+          const d = getDistanceFromLatLonInKm(fromLat, fromLng, s.lat, s.lng);
+          if (d < 2.0 && d < bestBoard1Dist) { bestBoard1Dist = d; bestBoard1 = s; }
+        }
+        if (!bestBoard1) continue;
+
+        for (const route2 of routes) {
+          if (route1.id === route2.id) continue;
+          const route2Stops = stops.filter(s => s.routeId === route2.id);
+
+          let bestAlight2 = null, bestAlight2Dist = Infinity;
+          for (const s of route2Stops) {
+            const d = getDistanceFromLatLonInKm(toLat, toLng, s.lat, s.lng);
+            if (d < 2.0 && d < bestAlight2Dist) { bestAlight2Dist = d; bestAlight2 = s; }
+          }
+          if (!bestAlight2) continue;
+
+          let bestTransfer = null;
+          let minTransferDist = Infinity;
+
+          for (const s1 of route1Stops) {
+            if (s1.id === bestBoard1.id) continue;
+            for (const s2 of route2Stops) {
+              if (s2.id === bestAlight2.id) continue;
+              const d = getDistanceFromLatLonInKm(s1.lat, s1.lng, s2.lat, s2.lng);
+              if (d < 0.6 && d < minTransferDist) {
+                minTransferDist = d;
+                bestTransfer = { s1, s2, dist: d };
+              }
+            }
+          }
+
+          if (bestTransfer) {
+            const score = bestBoard1Dist + minTransferDist + bestAlight2Dist + 1.0; // Penalty for transfer
+            if (score < bestScore) {
+              bestScore = score;
+              bestTransit = {
+                isTransfer: true,
+                route1,
+                route2,
+                startStop1: bestBoard1,
+                endStop1: bestTransfer.s1,
+                startStop2: bestTransfer.s2,
+                endStop2: bestAlight2,
+                walk1Dist: bestBoard1Dist,
+                transferWalkDist: minTransferDist,
+                walk2Dist: bestAlight2Dist
+              };
+            }
+          }
+        }
+      }
+
+      if (!bestTransit || directWalkDist <= bestScore * 0.7) {
         return res.json({
           type: 'WALK_ONLY',
           walk1: await getWalkingPath(fromLat, fromLng, toLat, toLng),
@@ -312,50 +362,67 @@ async function startServer() {
         });
       }
 
-      // Build bus path geometry
-      const routeStops = stops.filter(s => s.routeId === bestTransit.route.id);
-      const boardIdx   = routeStops.findIndex(s => s.id === bestTransit.startStop.id);
-      const alightIdx  = routeStops.findIndex(s => s.id === bestTransit.endStop.id);
-
-      let busPath = [];
-      if (bestTransit.route.path && bestTransit.route.path.length > 1) {
-        // Slice route geometry between board and alight stop
-        const path = bestTransit.route.path;
+      // Helper to slice path
+      const slicePath = (path, s1, s2) => {
+        if (!path || path.length < 2) return [[s1.lat, s1.lng], [s2.lat, s2.lng]];
         let si = 0, ei = path.length - 1, minSD = Infinity, minED = Infinity;
         path.forEach((coord, i) => {
-          const ds = getDistanceFromLatLonInKm(bestTransit.startStop.lat, bestTransit.startStop.lng, coord[0], coord[1]);
-          const de = getDistanceFromLatLonInKm(bestTransit.endStop.lat, bestTransit.endStop.lng, coord[0], coord[1]);
+          const ds = getDistanceFromLatLonInKm(s1.lat, s1.lng, coord[0], coord[1]);
+          const de = getDistanceFromLatLonInKm(s2.lat, s2.lng, coord[0], coord[1]);
           if (ds < minSD) { minSD = ds; si = i; }
           if (de < minED) { minED = de; ei = i; }
         });
-        if (si <= ei) busPath = path.slice(si, ei + 1);
-        else busPath = path.slice(ei, si + 1).reverse();
+        if (si <= ei) return path.slice(si, ei + 1);
+        return path.slice(ei, si + 1).reverse();
+      };
+
+      if (!bestTransit.isTransfer) {
+        const busPath = slicePath(bestTransit.route.path, bestTransit.startStop, bestTransit.endStop);
+        const walk1Path = await getWalkingPath(fromLat, fromLng, bestTransit.startStop.lat, bestTransit.startStop.lng);
+        const walk2Path = await getWalkingPath(bestTransit.endStop.lat, bestTransit.endStop.lng, toLat, toLng);
+
+        return res.json({
+          type: 'TRANSIT',
+          isTransfer: false,
+          route: { number: bestTransit.route.number, name: bestTransit.route.name },
+          stop1: bestTransit.startStop,
+          stop2: bestTransit.endStop,
+          walk1: walk1Path,
+          busPath,
+          walk2: walk2Path,
+          walk1Dist: bestTransit.walk1Dist,
+          walk2Dist: bestTransit.walk2Dist,
+          isDirect: false,
+          isPartial: bestTransit.walk2Dist > 0.1
+        });
       } else {
-        // Fallback: straight lines through stops
-        for (let i = boardIdx; i <= alightIdx && i < routeStops.length; i++) {
-          busPath.push([routeStops[i].lat, routeStops[i].lng]);
-        }
+        const busPath1 = slicePath(bestTransit.route1.path, bestTransit.startStop1, bestTransit.endStop1);
+        const busPath2 = slicePath(bestTransit.route2.path, bestTransit.startStop2, bestTransit.endStop2);
+        
+        const walk1Path = await getWalkingPath(fromLat, fromLng, bestTransit.startStop1.lat, bestTransit.startStop1.lng);
+        const transferWalkPath = await getWalkingPath(bestTransit.endStop1.lat, bestTransit.endStop1.lng, bestTransit.startStop2.lat, bestTransit.startStop2.lng);
+        const walk2Path = await getWalkingPath(bestTransit.endStop2.lat, bestTransit.endStop2.lng, toLat, toLng);
+
+        return res.json({
+          type: 'TRANSIT_TRANSFER',
+          isTransfer: true,
+          route1: { number: bestTransit.route1.number, name: bestTransit.route1.name },
+          route2: { number: bestTransit.route2.number, name: bestTransit.route2.name },
+          stop1: bestTransit.startStop1,
+          stop2: bestTransit.endStop1,
+          stop3: bestTransit.startStop2,
+          stop4: bestTransit.endStop2,
+          walk1: walk1Path,
+          busPath1,
+          transferWalk: transferWalkPath,
+          busPath2,
+          walk2: walk2Path,
+          walk1Dist: bestTransit.walk1Dist,
+          transferWalkDist: bestTransit.transferWalkDist,
+          walk2Dist: bestTransit.walk2Dist,
+          isDirect: false
+        });
       }
-
-      const walk2Dist = bestTransit.walk2Dist;
-      const isPartial = walk2Dist > 0.1; // more than 100m walk at end
-      
-      const walk1Path = await getWalkingPath(fromLat, fromLng, bestTransit.startStop.lat, bestTransit.startStop.lng);
-      const walk2Path = await getWalkingPath(bestTransit.endStop.lat, bestTransit.endStop.lng, toLat, toLng);
-
-      return res.json({
-        type: 'TRANSIT',
-        isPartial,
-        route: { number: bestTransit.route.number, name: bestTransit.route.name },
-        stop1: bestTransit.startStop,
-        stop2: bestTransit.endStop,
-        walk1: walk1Path,
-        busPath,
-        walk2: walk2Path,
-        walk1Dist: bestTransit.walk1Dist,
-        walk2Dist,
-        isDirect: false
-      });
 
     } catch (e) {
       console.error(e);
