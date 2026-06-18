@@ -371,7 +371,8 @@ async function startServer() {
     res.sendFile(path.join(frontendDistPath, 'index.html'));
   });
 
-  app.listen(80, () => console.log('Full Stack Server started on port 80'));
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`Full Stack Server started on port ${PORT}`));
 }
 
 startServer().catch(console.error);
